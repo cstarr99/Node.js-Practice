@@ -2,6 +2,10 @@ const fs = require("fs");
 const http = require("http");
 const url = require("url");
 
+const slugify = require("slugify");
+
+const tempReplace = require("./modules/tempReplace.js");
+
 ////////////////
 //READING/WRITING FILES
 
@@ -36,20 +40,7 @@ const url = require("url");
 
 ////////////////////
 //SERVER
-const tempReplace = (temp, product) => {
-  let output = temp.replace(/{%PRODUCTNAME%}/g, product.productName);
-  output = output.replace(/{%IMAGE%}/g, product.image);
-  output = output.replace(/{%PRICE%}/g, product.price);
-  output = output.replace(/{%FROM%}/g, product.from);
-  output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
-  output = output.replace(/{%QUANTITY%}/g, product.quantity);
-  output = output.replace(/{%DESCRIPTION%}/g, product.description);
-  output = output.replace(/{%ID%}/g, product.id);
-
-  if (!product.organic)
-    output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
-  return output;
-};
+//function that takes in the temp html file, and one object from the productData array. it replaces all placeholders with their counterpart from productData and returns the updated HTML.
 
 //its easier to have json read up here than in if statements because it will only be ran once, so its also ok to use sync.
 const tempOverview = fs.readFileSync(
@@ -70,25 +61,34 @@ const productData = JSON.parse(data);
 
 const server = http.createServer((req, res) => {
   //the paths are for urls ex: ("127.0.0.1:800/product" will = "welcome to product")
-  const pathName = req.url;
+  // sets query to whatever query is set to when url is parsed, and same for pathname
+  const { query, pathname } = url.parse(req.url, true);
 
   //OVERVIEW
-  if (pathName === "/" || pathName === "/overview") {
+  if (pathname === "/" || pathname === "/overview") {
     //res.end is server sending response to website.
     res.writeHead(200, { "content-type": "text/html" });
 
     const cardsHtml = productData
+      //makes a new array of 5 objects, but each object(element) is being put through tempReplace with the temp html file.
+      //Since productData is an array of 5 objects, element is one object at a time.
       .map((element) => tempReplace(tempCard, element))
+      //the array is joined as a string
       .join("");
-
+    //replaces the area with PRODUCTS_CARDS with all the updated html sections.
     const output = tempOverview.replace("{%PRODUCT_CARDS%}", cardsHtml);
     res.end(output);
     //PRODUCT
-  } else if (pathName === "/product") {
-    res.end("Welcome to the product");
-
+  } else if (pathname === "/product") {
+    res.writeHead(200, { "content-type": "text/html" });
+    //gets the query id number from url and uses it to choose which object from array to select.
+    const product = productData[query.id];
+    //uses the correct object(ex: goat and sheep cheese) and the product template to make the html for that goat cheese section.
+    //it uses the the same tempReplace function that switches the generic content in the template with real data from JSON file(productData).
+    const output = tempReplace(tempProduct, product);
+    res.end(output);
     //API
-  } else if (pathName === "/api") {
+  } else if (pathname === "/api") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(data);
     //NOT FOUND
@@ -99,6 +99,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
+//tells the server to turn on and start listening to requests.
 server.listen(8000, "127.0.0.1", () => {
   console.log("server listening");
 });
