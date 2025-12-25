@@ -71,6 +71,34 @@ app.post('/api/v1/tours', (req, res) => {
   );
 });
 
+app.patch('/api/v1/tours/:id', (req, res) => {
+  if (req.params.id * 1 > tours.length) {
+    res.status(404).json({
+      status: 'failure',
+      message: 'invalid id',
+    });
+  }
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour: 'updated tour here',
+    },
+  });
+});
+
+app.delete('/api/v1/tours/:id', (req, res) => {
+  if (req.params.id * 1 > tours.length) {
+    res.status(404).json({
+      status: 'failure',
+      message: 'invalid id',
+    });
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
 const port = 3000;
 app.listen(port, () => {
   console.log(`the server is running on ${port}`);
