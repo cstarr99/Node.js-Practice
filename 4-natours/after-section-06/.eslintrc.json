@@ -5,14 +5,14 @@
     "prettier/prettier": "error",
     "spaced-comment": "off",
     "no-console": "warn",
-    "consistent-return": "off",
+    "consistent-return": "error",
     "func-names": "off",
-    "object-shorthand": "off",
+    "object-shorthand": "error",
     "no-process-exit": "off",
     "no-param-reassign": "off",
     "no-return-await": "off",
     "no-underscore-dangle": "off",
-    "class-methods-use-this": "off",
+    "class-methods-use-this": "error",
     "prefer-destructuring": ["error", { "object": true, "array": false }],
     "no-unused-vars": ["error", { "argsIgnorePattern": "req|res|next|val" }]
   }
